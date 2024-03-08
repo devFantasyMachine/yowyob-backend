@@ -1,0 +1,60 @@
+# =================== Server Properties ======================
+# ============================================================
+
+server:
+  shutdown: graceful
+  port: ${SERVER_PORT:8099}
+
+
+
+# =================== Spring Properties ======================
+# ============================================================
+
+spring:
+  security:
+    user:
+      roles:
+        - ADMIN
+      name: yowyob-service
+      password: ${SPRING_GATEAWAY_SERVER_PASSWORD:5257523464711969222}
+
+  application:
+    name: gateway-service
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  profiles:
+    active: default
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+#  config:
+#    import: optional:configserver:https://${CONFIG_SERVER_HOST:localhost}:${CONFIG_SERVER_PORT:4808}/
+  cloud:
+    config:
+      enabled: true
+      uri:
+        - https://${CONFIG_SERVER_HOST:localhost}:${CONFIG_SERVER_PORT:4808}/
+      tls:
+        enabled: true
+        trustStore: classpath:letsgo-ssl-store.jks
+        trustStorePassword: ys0b@w-cm
+        trustStoreType: jks
+        keyStore: classpath:letsgo-ssl-store.jks
+        keyStoreType: jks
+        keyPassword: ys0b@w-cm
+        keyStorePassword: ys0b@w-cm
+        keyAlias: yowyob_localhost_sslserver
+      name: gateway-service
+      username: yowyob-service
+      password: ${CONFIG_SERVER_PASSWORD:52575234647119692221}
+    server:
+      encrypt:
+        enabled: false
+
+
+encrypt:
+  key: qe4fsLLRFkKWU+teQnJe2cH8tOk3ocvryyQaRDXqbOWZXovuMvmlcWdgQMp0XyXCSG6b25

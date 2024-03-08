@@ -1,0 +1,19 @@
+version: '3.5'
+
+services:
+
+  register_service:
+    environment:
+      - SERVER_PORT=8761
+
+    image: registerservice
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "8889:8761"
+ 
+    restart: unless-stopped
+
+
+

@@ -1,0 +1,51 @@
+server:
+  port: ${SERVER_PORT:8761}
+  shutdown: graceful
+  ssl:
+    enabled: true
+    key-store: classpath:letsgo-ssl-store.jks
+    key-store-provider: SUN
+    key-store-type: JKS
+    key-alias: yowyob_localhost_sslserver
+    key-store-password: ys0b@w-cm
+    key-password: ys0b@w-cm
+
+#    trust-store-type: JKS
+#    trust-store: "classpath:ssl-server.jks"
+#    trust-store-password: ys0b@w-cm
+
+
+
+spring:
+  application:
+    name: register-service
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  security:
+    user:
+      name: yowyob-service
+      password: ${SPRING_CLOUD_EUREKA_SERVER_PASSWORD:5257523464711969222}
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  instance:
+    prefer-Ip-Address: true
+    nonSecurePortEnabled: false
+    securePortEnabled: true
+    securePort: ${server.port}
+  server:
+    wait-time-in-ms-when-sync-empty: 0
+
+
+  dashboard:
+    enabled: true
+
+logging:
+  file.name: ${LOG_FILE:./logs/myLog.log}
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: INFO

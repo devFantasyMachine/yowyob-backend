@@ -1,0 +1,84 @@
+server:
+  port: ${SERVER_PORT:3090}
+  host: ${SERVER_HOST:localhost}
+  shutdown: graceful
+  error:
+    includeStacktrace: NEVER
+    includeException: false
+    whitelabel:
+      enabled: false
+
+
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+
+
+logging:
+  level:
+#    root: INFO
+#    org.springframework.web: INFO
+    org.springframework.security.oauth2: TRACE
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  application:
+    name: iam-service
+  profiles:
+    active: prod
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  #      password: ${REDIS_PASSWORD:WQ1k5mlZwOcsAkn3J9CgnzD9o}
+#  mvc:
+#    pathmatch:
+#      matching-strategy: ANT_PATH_MATCHER
+  datasource:
+    url: ${POSTGRES_HOST:jdbc:postgresql://localhost/yy_auth_db}
+    username: ${POSTGRES_USERNAME:fantasymachine}
+    password: ${POSTGRES_PASSWORD:fantasymachine}
+
+  #  datasource:
+  #    url: ${POSTGRES_HOST:jdbc:postgresql://88.198.150.195/postgres}
+  #    username: ${POSTGRES_USERNAME:letsgomaster}
+  #    password: ${POSTGRES_PASSWORD:x8cerxY0PVR128p6Rx2i}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL:update}
+
+  cloud:
+    config:
+      enabled: false
+
+
+
+yowyob:
+  messaging:
+    host: localhost
+    port: 6789
+
+auth:
+  app:
+    setup:
+      superAdminEmail: devfantasymachine@gmail.com
+      defaultIssuer: localhost:3000
+      organisation:
+        shortName: Yowyob
+        name: Your way Your Business
+        description: Yowyob IAM App
+
+
+# NmVmZmFlYjctNzgwMi00NDVlLWE1ZDQtZjU4OGQ2OTE1ODVkEhFg1og_d2ZVz0axklMUPqY_ZHPIIg0yAxZy30UJCpU1F1ZecRTbfFITCGB47wG0MjY=
+# http://localhost:3000/invitation?token=ZjhjMjRkM2QtMmNhOS00NzVkLTlkMzktMjZjNDg5NTgxZjllWyNruSdDki6qasEmzn147kOL5xqRB5v74-xdtzgIgf1wYYDGw4YWX6yplEYB2IeuEaY=

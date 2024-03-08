@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Copyright (c) 2020, FusionAuth, All Rights Reserved
+  -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.fusionauth.api.domain.FormMapper">
+
+  <resultMap id="Form" type="io.fusionauth.domain.form.Form">
+    <id column="f_id" property="id"/>
+    <result property="dataFromDatabase" column="f_data"/>
+    <result property="insertInstant" column="f_insert_instant"/>
+    <result property="name" column="f_name"/>
+    <result property="lastUpdateInstant" column="f_last_update_instant"/>
+    <result property="type" column="f_type"/>
+  </resultMap>
+
+  <resultMap id="FormField" type="io.fusionauth.domain.form.FormField">
+    <id column="ff_id" property="id"/>
+    <result property="consentId" column="ff_consents_id"/>
+    <result property="dataFromDatabase" column="ff_data"/>
+    <result property="insertInstant" column="ff_insert_instant"/>
+    <result property="lastUpdateInstant" column="ff_last_update_instant"/>
+    <result property="name" column="ff_name"/>
+  </resultMap>
+
+  <resultMap id="_FormFieldWithStep" type="io.fusionauth.api.domain.mybatis._FormFieldWithStep" extends="FormField">
+    <result property="step" column="fs_step" />
+  </resultMap>
+
+  <resultMap id="_FormStepField" type="io.fusionauth.api.domain.mybatis._FormFieldId">
+    <result column="ff_id" property="fieldId"/>
+    <result column="fs_step" property="step"/>
+  </resultMap>
+
+  <sql id="select">
+    SELECT
+      f.id                            AS f_id,
+      f.data                          AS f_data,
+      f.insert_instant                AS f_insert_instant,
+      f.last_update_instant           AS f_last_update_instant,
+      f.name                          AS f_name,
+      f.type                          f_type
+      FROM forms AS f
+  </sql>
+
+  <sql id="selectField">
+    SELECT
+      ff.id                            AS ff_id,
+      ff.consents_id                   AS ff_consents_id,
+      ff.data                          AS ff_data,
+      ff.insert_instant                AS ff_insert_instant,
+      ff.last_update_instant           AS ff_last_update_instant,
+      ff.name                          AS ff_name
+      FROM form_fields AS ff
+  </sql>
+
+  <sql id="selectFieldIds">
+    SELECT
+      ff.id                            AS ff_id,
+      fs.step                          AS fs_step
+      FROM form_steps AS fs
+      INNER JOIN form_fields ff ON ff.id = fs.form_fields_id
+  </sql>
+
+  <sql id="selectFieldsWithStep">
+    SELECT
+      ff.id                            AS ff_id,
+      ff.consents_id                   AS ff_consents_id,
+      ff.data                          AS ff_data,
+      ff.insert_instant                AS ff_insert_instant,
+      ff.last_update_instant           AS ff_last_update_instant,
+      ff.name                          AS ff_name,
+      fs.step                          AS fs_step
+      FROM form_steps AS fs
+             INNER JOIN form_fields ff ON ff.id = fs.form_fields_id
+  </sql>
+
+  <insert id="create">
+    INSERT INTO forms (id, data, insert_instant, last_update_instant, name, type)
+    VALUES (#{id}, #{dataToDatabase} ,#{insertInstant}, #{lastUpdateInstant}, #{name}, #{type})
+  </insert>
+
+  <insert id="createFormSteps">
+    INSERT INTO form_steps (form_fields_id, forms_id, sequence, step) VALUES
+    <foreach collection="fieldIds" item="fieldId" separator="," index="index">
+      (#{fieldId}, #{formId}, #{index}, #{step})
+    </foreach>
+  </insert>
+
+  <insert id="createField">
+    INSERT INTO form_fields (id, consents_id, data, insert_instant, last_update_instant, name)
+    VALUES (#{id}, #{consentId}, #{dataToDatabase} ,#{insertInstant}, #{lastUpdateInstant}, #{name})
+  </insert>
+
+  <select id="retrieveById" resultMap="Form">
+    <include refid="select"/>
+    WHERE f.id = #{id}
+  </select>
+
+  <select id="retrieveFieldById" resultMap="FormField">
+    <include refid="selectField"/>
+    WHERE ff.id = #{id}
+  </select>
+
+  <select id="retrieveAll" resultMap="Form">
+    <include refid="select"/>
+    ORDER BY f.insert_instant DESC
+  </select>
+
+  <select id="retrieveAllByType" resultMap="Form">
+    <include refid="select"/>
+    WHERE type = #{type}
+    ORDER BY f.insert_instant DESC
+  </select>
+
+  <select id="retrieveAllFields" resultMap="FormField">
+    <include refid="selectField"/>
+    ORDER BY ff.insert_instant DESC
+  </select>
+
+  <select id="retrieveAllFieldIdsByFormId" resultMap="_FormStepField">
+    <include refid="selectFieldIds"/>
+    WHERE fs.forms_id = #{formId}
+    ORDER BY fs.step ASC, fs.sequence ASC
+  </select>
+
+  <select id="retrieveAllFieldsByFormIdForStep" resultMap="FormField">
+    <include refid="selectField"/>
+    INNER JOIN form_steps fs ON ff.id = fs.form_fields_id
+    WHERE fs.forms_id = #{formId} AND fs.step = #{step}
+    ORDER BY fs.sequence ASC
+  </select>
+
+  <select id="retrieveAllFieldsByFormId" resultMap="FormField">
+    <include refid="selectField"/>
+    INNER JOIN form_steps fs ON ff.id = fs.form_fields_id
+    WHERE fs.forms_id = #{formId}
+    ORDER BY fs.sequence ASC
+  </select>
+
+  <select id="retrieveAllFieldsWithStep" resultMap="_FormFieldWithStep">
+    <include refid="selectFieldsWithStep"/>
+    WHERE fs.forms_id = #{formId}
+  </select>
+
+  <select id="retrieveExisting" resultMap="Form">
+    <include refid="select"/>
+    WHERE
+    <if test="id != null">
+      f.id != #{id} AND
+    </if>
+    f.name = #{name}
+  </select>
+
+  <select id="retrieveFieldIdByConsentId" resultType="java.util.UUID">
+    SELECT
+     id FROM form_fields
+    WHERE
+    consents_id = #{consentId}
+  </select>
+
+  <select id="retrieveExistingField" resultMap="FormField">
+    <include refid="selectField"/>
+    WHERE
+    <if test="id != null">
+      ff.id != #{id} AND
+    </if>
+    ff.name = #{name}
+  </select>
+
+  <select id="retrieveAdminRegistrationInUseCount" resultType="int">
+    SELECT count(*)
+    FROM applications
+    WHERE admin_registration_forms_id = #{formId}
+  </select>
+
+  <select id="retrieveAdminUserInUseByCount" resultType="int">
+    SELECT count(*)
+    FROM tenants
+    WHERE admin_user_forms_id = #{formId}
+  </select>
+
+  <select id="retrieveRegistrationInUseCount" resultType="int">
+    SELECT count(*)
+    FROM applications
+    WHERE forms_id = #{formId}
+  </select>
+
+  <select id="retrieveSelfServiceUserInUseCount" resultType="int">
+    SELECT count(*)
+    FROM applications
+    WHERE self_service_user_forms_id = #{formId}
+  </select>
+
+  <update id="update">
+    UPDATE forms
+    SET
+      data                = #{dataToDatabase},
+      last_update_instant = #{lastUpdateInstant},
+      name                = #{name}
+    WHERE id = #{id}
+  </update>
+
+  <update id="updateField">
+    UPDATE form_fields
+    SET
+      data                = #{dataToDatabase},
+      last_update_instant = #{lastUpdateInstant},
+      name                = #{name}
+    WHERE id = #{id}
+  </update>
+
+  <delete id="delete">
+    DELETE
+    FROM forms
+    WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteField">
+    DELETE
+    FROM form_fields
+    WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteFormSteps">
+    DELETE
+    FROM form_steps
+    WHERE forms_id = #{formId}
+  </delete>
+
+</mapper>
+

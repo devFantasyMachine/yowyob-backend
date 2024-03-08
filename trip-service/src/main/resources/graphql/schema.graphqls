@@ -1,0 +1,44 @@
+type Query {
+  getPlannerStatByPlannerId(plannerId: String): PlannerStat
+}
+
+
+type PlannerStat {
+  fromDate: String
+  toDate: String
+  globalStat: Stat
+  monthlyStats: [MonthStat]
+  yearsStats: [YearStat]
+}
+
+type MonthStat {
+    month: String
+    stat: Stat
+}
+
+type YearStat {
+    year: String
+    stat: Stat
+}
+
+
+type Stat {
+  plannedTripCount: Int
+  publishedTripCount: Int
+  cancelledTripCount: Int
+  routeStats: [RouteStat]
+  departureLocationCount: [StopLocationStat]
+  arrivalLocationCount: [StopLocationStat]
+}
+
+
+type StopLocationStat {
+   count: Int
+
+}
+
+type RouteStat {
+
+    count: Int
+    bookCount: Int
+}

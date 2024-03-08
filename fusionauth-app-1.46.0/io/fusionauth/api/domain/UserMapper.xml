@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.fusionauth.api.domain.UserMapper">
+  <resultMap id="User" type="io.fusionauth.domain.User">
+    <id property="id" column="u_id"/>
+    <result property="active" column="u_active"/>
+    <result property="birthDate" column="u_birth_date"/>
+    <result property="breachedPasswordLastCheckedInstant" column="i_breached_password_last_checked_instant"/>
+    <result property="breachedPasswordStatus" column="i_breached_password_status"/>
+    <result property="cleanSpeakId" column="u_clean_speak_id"/>
+    <result property="connectorId" column="i_connectors_id"/>
+    <result property="dataFromDatabase" column="u_data"/>
+    <result property="email" column="i_email"/>
+    <result property="encryptionScheme" column="i_encryption_scheme"/>
+    <result property="expiry" column="u_expiry"/>
+    <result property="factor" column="i_factor"/>
+    <result property="firstName" column="u_first_name"/>
+    <result property="fullName" column="u_full_name"/>
+    <result property="imageUrl" column="u_image_url"/>
+    <result property="insertInstant" column="u_insert_instant"/>
+    <result property="lastLoginInstant" column="i_last_login_instant"/>
+    <result property="lastUpdateInstant" column="i_last_update_instant"/>
+    <result property="lastName" column="u_last_name"/>
+    <result property="middleName" column="u_middle_name"/>
+    <result property="mobilePhone" column="u_mobile_phone"/>
+    <result property="parentEmail" column="u_parent_email"/>
+    <result property="password" column="i_password"/>
+    <result property="passwordChangeReason" column="i_password_change_reason"/>
+    <result property="passwordChangeRequired" column="i_password_change_required"/>
+    <result property="passwordLastUpdateInstant" column="i_password_last_update_instant"/>
+    <result property="salt" column="i_salt"/>
+    <result property="tenantId" column="u_tenants_id"/>
+    <result property="timezone" column="u_timezone"/>
+    <result property="uniqueUsername" column="i_unique_username"/>
+    <result property="username" column="i_username"/>
+    <result property="usernameStatus" column="i_username_status"/>
+    <result property="verified" column="i_verified"/>
+    <collection property="memberships" column="id" foreignColumn="users_id" resultMap="io.fusionauth.api.domain.GroupMapper.GroupMembership"/>
+    <collection property="registrations" column="id" foreignColumn="users_id" resultMap="UserRegistration"/>
+  </resultMap>
+
+  <resultMap id="UserRegistration" type="io.fusionauth.domain.UserRegistration">
+    <id property="id" column="ur_id"/>
+    <result property="applicationId" column="ur_applications_id"/>
+    <result property="authenticationToken" column="ur_authentication_token"/>
+    <result property="cleanSpeakId" column="ur_clean_speak_id"/>
+    <result property="dataFromDatabase" column="ur_data"/>
+    <result property="insertInstant" column="ur_insert_instant"/>
+    <result property="lastLoginInstant" column="ur_last_login_instant"/>
+    <result property="lastUpdateInstant" column="ur_last_update_instant"/>
+    <result property="timezone" column="ur_timezone"/>
+    <result property="username" column="ur_username"/>
+    <result property="usernameStatus" column="ur_username_status"/>
+    <result property="verified" column="ur_verified"/>
+    <association property="roles" columnPrefix="group_" resultMap="applicationRole"/>
+    <association property="roles" columnPrefix="registration_" resultMap="applicationRole"/>
+  </resultMap>
+
+  <resultMap type="String" id="applicationRole">
+    <result property="name" column="ar_name"/>
+  </resultMap>
+
+  <!--@formatter:off-->
+  <sql id="selectUserByLinkUserId">
+    SELECT u.id                                              AS u_id,
+      u.active                                               AS u_active,
+      u.birth_date                                           AS u_birth_date,
+      u.clean_speak_id                                       AS u_clean_speak_id,
+      u.data                                                 AS u_data,
+      u.expiry                                               AS u_expiry,
+      u.first_name                                           AS u_first_name,
+      u.full_name                                            AS u_full_name,
+      u.image_url                                            AS u_image_url,
+      u.insert_instant                                       AS u_insert_instant,
+      i.last_login_instant                                   AS i_last_login_instant,
+      i.users_id                                             AS i_users_id,
+      u.last_name                                            AS u_last_name,
+      u.middle_name                                          AS u_middle_name,
+      u.mobile_phone                                         AS u_mobile_phone,
+      u.parent_email                                         AS u_parent_email,
+      u.tenants_id                                           AS u_tenants_id,
+      u.timezone                                             AS u_timezone,
+      ur.id                                                  AS ur_id,
+      ur.applications_id                                     AS ur_applications_id,
+      ur.authentication_token                                AS ur_authentication_token,
+      ur.clean_speak_id                                      AS ur_cleanspeak_id,
+      ur.data                                                AS ur_data,
+      ur.insert_instant                                      AS ur_insert_instant,
+      ur.last_login_instant                                  AS ur_last_login_instant,
+      ur.last_update_instant                                 AS ur_last_update_instant,
+      ur.timezone                                            AS ur_timezone,
+      ur.username                                            AS ur_username,
+      ur.username_status                                     AS ur_username_status,
+      ur.verified                                            AS ur_verified,
+      ar1.name                                               AS group_ar_name,
+      ar2.name                                               AS registration_ar_name,
+      gm.id                                                  AS gm_id,
+      gm.groups_id                                           AS gm_groups_id,
+      gm.data                                                AS gm_data,
+      gm.insert_instant                                      AS gm_insert_instant
+      FROM identity_provider_links AS i
+      JOIN users AS u ON i.users_id = u.id
+      LEFT OUTER JOIN user_registrations AS ur ON u.id = ur.users_id
+      LEFT OUTER JOIN group_members AS gm ON u.id = gm.users_id
+      LEFT OUTER JOIN group_application_roles AS gar ON gar.groups_id = gm.groups_id
+      LEFT OUTER JOIN user_registrations_application_roles AS urar ON urar.user_registrations_id = ur.id
+      LEFT OUTER JOIN application_roles AS ar1 ON ar1.id = urar.application_roles_id AND ar1.applications_id = ur.applications_id
+      LEFT OUTER JOIN application_roles AS ar2 ON ar2.id = gar.application_roles_id AND ar2.applications_id = ur.applications_id
+  </sql>
+  <!--@formatter:on-->
+
+  <!--@formatter:off-->
+  <sql id="select">
+    SELECT u.id                                               AS u_id,
+      u.active                                                AS u_active,
+      i.breached_password_last_checked_instant                AS i_breached_password_last_checked_instant,
+      i.breached_password_status                              AS i_breached_password_status,
+      u.birth_date                                            AS u_birth_date,
+      u.clean_speak_id                                        AS u_clean_speak_id,
+      i.connectors_id                                         AS i_connectors_id,
+      u.data                                                  AS u_data,
+      i.email                                                 AS i_email,
+      i.encryption_scheme                                     AS i_encryption_scheme,
+      u.expiry                                                AS u_expiry,
+      i.factor                                                AS i_factor,
+      u.first_name                                            AS u_first_name,
+      u.full_name                                             AS u_full_name,
+      u.image_url                                             AS u_image_url,
+      u.insert_instant                                        AS u_insert_instant,
+      i.last_login_instant                                    AS i_last_login_instant,
+      i.last_update_instant                                   AS i_last_update_instant,
+      u.last_name                                             AS u_last_name,
+      u.middle_name                                           AS u_middle_name,
+      u.mobile_phone                                          AS u_mobile_phone,
+      u.parent_email                                          AS u_parent_email,
+      i.password                                              AS i_password,
+      i.password_change_reason                                AS i_password_change_reason,
+      i.password_change_required                              AS i_password_change_required,
+      i.password_last_update_instant                          AS i_password_last_update_instant,
+      i.salt                                                  AS i_salt,
+      u.tenants_id                                            AS u_tenants_id,
+      u.timezone                                              AS u_timezone,
+      -- Note, username_index is always the upper case version of username. To derive the unique username
+      -- value, replace the upcase version with the user version in username preserving the suffix which
+      -- consists of a separator and digits which will not be affected by the case.
+      REPLACE(username_index, UPPER(i.username), i.username)  AS i_unique_username,
+      i.username                                              AS i_username,
+      i.username_status                                       AS i_username_status,
+      -- Use COALESCE to make this work with MySQL.
+      -- MySQL uses a BIT(1) column instead of Boolean.
+      CASE WHEN i.email IS NULL
+        THEN TRUE
+        ELSE COALESCE (i.verified, FALSE) END                 AS i_verified,
+      ur.id                                                   AS ur_id,
+      ur.applications_id                                      AS ur_applications_id,
+      ur.authentication_token                                 AS ur_authentication_token,
+      ur.clean_speak_id                                       AS ur_cleanspeak_id,
+      ur.data                                                 AS ur_data,
+      ur.insert_instant                                       AS ur_insert_instant,
+      ur.last_login_instant                                   AS ur_last_login_instant,
+      ur.last_update_instant                                  AS ur_last_update_instant,
+      ur.timezone                                             AS ur_timezone,
+      ur.username                                             AS ur_username,
+      ur.username_status                                      AS ur_username_status,
+      ur.verified                                             AS ur_verified,
+      ar1.name                                                AS group_ar_name,
+      ar2.name                                                AS registration_ar_name,
+      gm.id                                                   AS gm_id,
+      gm.groups_id                                            AS gm_groups_id,
+      gm.data                                                 AS gm_data,
+      gm.insert_instant                                       AS gm_insert_instant
+      FROM users AS u
+      LEFT OUTER JOIN identities AS i ON u.id = i.users_id
+      LEFT OUTER JOIN user_registrations AS ur ON u.id = ur.users_id
+      LEFT OUTER JOIN group_members AS gm ON u.id = gm.users_id
+      LEFT OUTER JOIN group_application_roles AS gar ON gar.groups_id = gm.groups_id
+      LEFT OUTER JOIN user_registrations_application_roles AS urar ON urar.user_registrations_id = ur.id
+      LEFT OUTER JOIN application_roles AS ar1 ON ar1.id = urar.application_roles_id AND ar1.applications_id = ur.applications_id
+      LEFT OUTER JOIN application_roles AS ar2 ON ar2.id = gar.application_roles_id AND ar2.applications_id = ur.applications_id
+  </sql>
+  <!--@formatter:on-->
+
+  <sql id="selectTerm">
+    SELECT u.id
+      FROM users AS u
+             LEFT OUTER JOIN identities AS i
+      ON u.id = i.users_id
+  </sql>
+
+  <sql id="selectTermCount">
+    SELECT count(*)
+      FROM users AS u
+             LEFT OUTER JOIN identities AS i
+      ON u.id = i.users_id
+  </sql>
+
+  <!--@formatter:off-->
+  <sql id="registrationSelect">
+    SELECT ur.id              AS ur_id,
+      ur.applications_id      AS ur_applications_id,
+      ur.authentication_token AS ur_authentication_token,
+      ur.clean_speak_id       AS ur_clean_speak_id,
+      ur.data                 AS ur_data,
+      ur.insert_instant       AS ur_insert_instant,
+      ur.last_login_instant   AS ur_last_login_instant,
+      ur.last_update_instant  AS ur_last_update_instant,
+      ur.timezone             AS ur_timezone,
+      ur.username             AS ur_username,
+      ur.username_status      AS ur_username_status,
+      ur.users_id             AS ur_users_id,
+      ur.verified             AS ur_verified,
+      ar1.name                AS group_ar_name,
+      ar2.name                AS registration_ar_name,
+      a.tenants_id            AS a_tenants_id
+      FROM user_registrations AS ur
+      INNER JOIN applications AS a ON a.id = ur.applications_id
+      LEFT OUTER JOIN user_registrations_application_roles AS urar ON urar.user_registrations_id = ur.id
+      LEFT OUTER JOIN group_members AS gm ON ur.users_id = gm.users_id
+      LEFT OUTER JOIN group_application_roles AS gar ON gar.groups_id = gm.groups_id
+      LEFT OUTER JOIN application_roles AS ar1 ON ar1.id = urar.application_roles_id AND ar1.applications_id = ur.applications_id
+      LEFT OUTER JOIN application_roles AS ar2 ON ar2.id = gar.application_roles_id AND ar2.applications_id = ur.applications_id
+  </sql>
+  <!--@formatter:on-->
+
+  <insert id="create">
+    INSERT INTO users (id, active, birth_date, clean_speak_id, data, expiry, first_name, full_name, image_url, insert_instant, last_name, last_update_instant, middle_name, mobile_phone, parent_email, tenants_id, timezone)
+      VALUES (#{user.id}, #{user.active}, #{user.birthDate}, #{user.cleanSpeakId}, #{user.dataToDatabase}, #{user.expiry}, #{user.firstName}, #{user.fullName}, #{user.imageUrl}, #{user.insertInstant}, #{user.lastName}, #{user.lastUpdateInstant}, #{user.middleName}, #{user.mobilePhone}, #{user.parentEmail}, #{user.tenantId}, #{user.timezone})
+  </insert>
+
+  <insert id="createIdentity">
+    INSERT INTO identities (users_id, breached_password_last_checked_instant, breached_password_status, connectors_id, email, encryption_scheme, factor, insert_instant, last_login_instant, last_update_instant, password, password_change_reason, password_change_required, password_last_update_instant, salt, tenants_id, username, username_index, username_status, verified, status)
+      VALUES (#{user.id}, #{user.breachedPasswordLastCheckedInstant}, #{user.breachedPasswordStatus}, #{user.connectorId}, #{user.email}, #{user.encryptionScheme}, #{user.factor}, #{user.insertInstant}, #{user.lastLoginInstant}, #{user.lastUpdateInstant}, #{user.password}, #{user.passwordChangeReason}, #{user.passwordChangeRequired}, #{user.passwordLastUpdateInstant}, #{user.salt}, #{user.tenantId}, #{user.username}, UPPER(#{user.uniqueUsername}), #{user.usernameStatus}, #{user.verified}, #{status})
+  </insert>
+
+  <insert id="createBulk">
+    INSERT INTO users (id, active, birth_date, clean_speak_id, data, expiry, first_name, full_name, image_url, insert_instant, last_name,
+    last_update_instant,
+    middle_name, mobile_phone, parent_email, tenants_id, timezone)
+    VALUES
+    <foreach collection="users" item="user" separator=",">
+      (#{user.id}, #{user.active}, #{user.birthDate}, #{user.cleanSpeakId}, #{user.dataToDatabase}, #{user.expiry}, #{user.firstName},
+      #{user.fullName}, #{user.imageUrl}, #{user.insertInstant}, #{user.lastName}, #{user.lastUpdateInstant}, #{user.middleName}, #{user.mobilePhone},
+      #{user.parentEmail}, #{user.tenantId}, #{user.timezone})
+    </foreach>
+  </insert>
+
+  <insert id="createIdentityBulk">
+    INSERT INTO identities (users_id, breached_password_last_checked_instant, breached_password_status, connectors_id, email,
+    encryption_scheme, factor, insert_instant, last_login_instant, last_update_instant, password, password_change_reason,
+    password_change_required, password_last_update_instant, salt, tenants_id,
+    username, username_index, username_status, verified, status)
+    VALUES
+    <foreach collection="users" item="user" separator=",">
+      (#{user.id}, #{user.breachedPasswordLastCheckedInstant}, #{user.breachedPasswordStatus}, #{user.connectorId}, #{user.email},
+      #{user.encryptionScheme}, #{user.factor}, #{user.insertInstant}, #{user.lastLoginInstant}, #{user.lastUpdateInstant}, #{user.password},
+      #{user.passwordChangeReason}, #{user.passwordChangeRequired}, #{user.passwordLastUpdateInstant}, #{user.salt}, #{user.tenantId},
+      #{user.username}, UPPER(#{user.username}), #{user.usernameStatus} ,#{user.verified}, #{status})
+    </foreach>
+  </insert>
+
+  <insert id="createRegistration">
+    INSERT INTO user_registrations (id, applications_id, authentication_token, clean_speak_id, data, insert_instant, last_login_instant, last_update_instant, timezone, username, username_status, users_id, verified)
+      VALUES (#{registration.id}, #{application.id}, #{registration.authenticationToken}, #{registration.cleanSpeakId}, #{registration.dataToDatabase}, #{registration.insertInstant}, #{registration.lastLoginInstant}, #{registration.lastUpdateInstant}, #{registration.timezone}, #{registration.username}, #{registration.usernameStatus}, #{user.id}, #{registration.verified})
+  </insert>
+
+  <insert id="createRegistrationBulk">
+    INSERT INTO user_registrations (id, applications_id, authentication_token, clean_speak_id, data, insert_instant, last_login_instant,
+    last_update_instant,
+    timezone, username, username_status, users_id, verified)
+    VALUES
+    <foreach collection="pairs" item="pair" separator=",">
+      (#{pair.first.id}, #{pair.first.applicationId}, #{pair.first.authenticationToken}, #{pair.first.cleanSpeakId},
+      #{pair.first.dataToDatabase}, #{pair.first.insertInstant}, #{pair.first.lastLoginInstant}, #{pair.first.lastUpdateInstant},
+      #{pair.first.timezone},
+      #{pair.first.username}, #{pair.first.usernameStatus}, #{pair.second.id}, #{pair.first.verified})
+    </foreach>
+  </insert>
+
+  <insert id="createPreviousPassword">
+    INSERT INTO previous_passwords (users_id, encryption_scheme, password, salt, factor, insert_instant)
+      VALUES (#{userId}, #{encryptionScheme}, #{password}, #{salt}, #{factor}, #{insertInstant})
+  </insert>
+
+  <insert id="createPreviousPasswordBulk">
+    INSERT INTO previous_passwords (users_id, encryption_scheme, password, salt, factor, insert_instant)
+    VALUES
+    <foreach collection="passwords" item="password" separator=",">
+      (#{password.userId}, #{password.encryptionScheme}, #{password.password}, #{password.salt}, #{password.factor},
+      #{password.insertInstant})
+    </foreach>
+  </insert>
+
+  <insert id="addRolesToUserRegistration">
+    INSERT INTO user_registrations_application_roles (application_roles_id, user_registrations_id)
+    VALUES
+    <foreach collection="roles" item="role" separator=",">
+      (#{role.id}, #{userRegistrationId})
+    </foreach>
+  </insert>
+
+  <insert id="addRolesToUserRegistrationBulk">
+    INSERT INTO user_registrations_application_roles (application_roles_id, user_registrations_id)
+    VALUES
+    <foreach collection="roleMap" item="roleMap" separator=",">
+      (#{roleMap.first}, #{roleMap.second})
+    </foreach>
+  </insert>
+
+  <delete id="deleteRolesFromRegistration" databaseId="mysql">
+    DELETE
+    user_registrations_application_roles
+      FROM user_registrations_application_roles
+        INNER JOIN user_registrations AS ur
+    ON user_registrations_application_roles.user_registrations_id = ur.id
+      WHERE ur.id =
+    #{registrationId}
+  </delete>
+
+  <delete id="deleteRolesFromRegistration" databaseId="postgresql">
+    DELETE
+      FROM user_registrations_application_roles USING user_registrations
+      WHERE user_registrations_application_roles.user_registrations_id = user_registrations.id AND
+        user_registrations.id = #{registrationId}
+  </delete>
+
+  <delete id="deletePreviousPasswordsByInsertInstants">
+    DELETE FROM previous_passwords
+    WHERE users_id = #{userId} AND insert_instant IN (<foreach collection="insertInstants" item="insertInstant" separator=",">
+    #{insertInstant}</foreach>)
+  </delete>
+
+  <delete id="deleteRolesForUser" databaseId="mysql">
+    DELETE
+    user_registrations_application_roles
+      FROM user_registrations_application_roles
+        INNER JOIN user_registrations AS ur
+    ON user_registrations_application_roles.user_registrations_id = ur.id
+      WHERE ur.users_id =
+    #{userId}
+  </delete>
+
+  <delete id="deleteRolesForUser" databaseId="postgresql">
+    DELETE
+      FROM user_registrations_application_roles USING user_registrations
+      WHERE user_registrations_application_roles.user_registrations_id = user_registrations.id AND
+        user_registrations.users_id = #{userId}
+  </delete>
+
+  <!--
+    Tested a few different ways to get the best performing 'exists' check.
+      Option 1 is about 10% faster when running 100,000 iterations
+
+      1) SELECT 1 FROM users WHERE email = #{email} LIMIT 1
+      2) SELECT EXISTS(SELECT 1 FROM users WHERE email = #{email} LIMIT 1)
+  -->
+  <select id="existsByUsername" resultType="java.lang.Integer">
+    SELECT 1
+      FROM identities
+      WHERE username_index = UPPER(#{username}) AND tenants_id = #{tenantId} LIMIT 1
+  </select>
+
+  <select id="existsByEmail" resultType="java.lang.Integer">
+    SELECT 1
+      FROM identities
+      WHERE email = #{email} AND tenants_id = #{tenantId} LIMIT 1
+  </select>
+
+  <select id="existsById" resultType="java.lang.Integer">
+    SELECT 1
+      FROM users
+      WHERE id = #{userId} AND tenants_id = #{tenantId} LIMIT 1
+  </select>
+
+  <!--
+    The configuration for this SELECT is super critical to ensure the results are streamed and not held in RAM. If we change any of this, we need to do
+    extensive testing with 1M+ rows and ensure JDBC/MyBatis still decides to stream the results.
+  -->
+  <select id="retrieveUsersForReindex" resultMap="User" statementType="STATEMENT" resultSetType="FORWARD_ONLY" fetchSize="50" resultOrdered="true" databaseId="postgresql">
+    <include refid="select"/>
+  </select>
+
+  <!--
+    The configuration for this SELECT is super critical to ensure the results are streamed and not held in RAM. If we change any of this, we need to do
+    extensive testing with 1M+ rows and ensure JDBC/MyBatis still decides to stream the results.
+  -->
+  <select id="retrieveUsersForReindex" resultMap="User" statementType="STATEMENT" resultSetType="FORWARD_ONLY" fetchSize="-2147483648" resultOrdered="true" databaseId="mysql">
+    <include refid="select"/>
+  </select>
+
+  <!--
+    The configuration for this SELECT is super critical to ensure the results are streamed and not held in RAM. If we change any of this, we need to do
+    extensive testing with 1M+ rows and ensure JDBC/MyBatis still decides to stream the results.
+  -->
+  <select id="retrieveAllByTenantId" resultMap="User" statementType="PREPARED" resultSetType="FORWARD_ONLY" fetchSize="50" resultOrdered="true" databaseId="postgresql">
+    <include refid="select"/>
+    WHERE u.tenants_id = #{tenantId}
+  </select>
+
+  <!--
+    The configuration for this SELECT is super critical to ensure the results are streamed and not held in RAM. If we change any of this, we need to do
+    extensive testing with 1M+ rows and ensure JDBC/MyBatis still decides to stream the results.
+  -->
+  <select id="retrieveAllByTenantId" resultMap="User" statementType="PREPARED" resultSetType="FORWARD_ONLY" fetchSize="-2147483648" resultOrdered="true" databaseId="mysql">
+    <include refid="select"/>
+    WHERE u.tenants_id = #{tenantId}
+  </select>
+
+  <select id="retrieveBreachedUsersPendingAction" resultMap="User">
+    <include refid="select"/>
+    WHERE i.breached_password_status IS NOT NULL
+    AND i.breached_password_status != 0 <!-- None -->
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+    LIMIT #{limit}
+    OFFSET #{offset}
+  </select>
+
+  <select id="retrieveBreachedUsersPendingActionCount" resultType="long">
+    SELECT COUNT(u.id)
+    FROM users u
+    LEFT JOIN identities AS i
+    ON u.id = i.users_id
+    WHERE i.breached_password_status IS NOT NULL
+    AND i.breached_password_status != 0 <!-- None -->
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveByEmail" resultMap="User">
+    <include refid="select"/>
+    WHERE i.email = lower(#{email}) AND u.tenants_id = #{tenantId}
+  </select>
+
+  <select id="retrieveUserByLinkUserId" resultMap="User">
+    <include refid="selectUserByLinkUserId"/>
+    WHERE i.users_id = #{id}
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveById" resultMap="User">
+    <include refid="select"/>
+    WHERE u.id = #{id}
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveByUserRegistrationId" resultMap="User">
+    <include refid="select"/>
+    WHERE ur.id = #{userRegistrationId}
+  </select>
+
+  <select id="retrieveByIds" resultMap="User">
+    <include refid="select"/>
+    WHERE u.id IN (
+    <foreach collection="ids" item="id" separator=",">#{id}</foreach>
+    )
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveByParentEmail" resultMap="User">
+    <include refid="select"/>
+    WHERE u.parent_email = lower(#{parentEmail}) AND u.tenants_id = #{tenantId}
+  </select>
+
+  <select id="retrieveByUsername" resultMap="User">
+    <include refid="select"/>
+    WHERE i.username_index = UPPER(#{username}) AND u.tenants_id = #{tenantId}
+  </select>
+
+  <select id="retrieveCountByTenantId" resultType="java.lang.Integer">
+    SELECT count(id)
+      FROM users
+      WHERE tenants_id = #{tenantId}
+  </select>
+
+  <select id="retrieveExistingByEmail" resultMap="User">
+    <include refid="select"/>
+    WHERE
+    <if test="userId != null">
+      u.id != #{userId} AND
+    </if>
+    i.email = #{email} AND u.tenants_id = #{tenantId}
+  </select>
+
+  <select id="retrieveExistingByUsername" resultMap="User">
+    <include refid="select"/>
+    WHERE
+    <if test="userId != null">
+      u.id != #{userId} AND
+    </if>
+    i.username_index = UPPER(#{username}) AND u.tenants_id = #{tenantId}
+  </select>
+
+  <select id="retrieveLimitOffset" resultMap="User">
+    <include refid="select"/>
+    LIMIT #{limit}
+    OFFSET #{offset}
+  </select>
+
+  <select id="retrieveRegistration" resultMap="UserRegistration">
+    <include refid="registrationSelect"/>
+    WHERE ur.users_id = #{userId} AND ur.applications_id = #{applicationId}
+    <if test="tenantId != null">
+      AND a.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveRegistrationById" resultMap="UserRegistration">
+    <include refid="registrationSelect"/>
+    WHERE ur.id = #{id}
+    <if test="tenantId != null">
+      AND a.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveUnverifiedChildren" resultMap="User">
+    <include refid="select"/>
+    WHERE u.parent_email IS NOT NULL
+    AND u.insert_instant &lt; ${cutoff}
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveUnverifiedEmailUsers" resultMap="User">
+    <include refid="select"/>
+    WHERE i.verified IS FALSE
+    AND u.insert_instant &lt; ${cutoff}
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <select id="retrieveUnverifiedRegistrations" resultMap="UserRegistration">
+    <include refid="registrationSelect"/>
+    WHERE ur.applications_id = #{applicationId}
+    AND ur.insert_instant &lt; ${cutoff}
+    AND ur.verified IS FALSE
+  </select>
+
+  <select id="searchByTerm" resultType="java.util.UUID">
+    <include refid="selectTerm"/>
+    WHERE (
+    lower(u.first_name) LIKE #{searchTerm} OR
+    lower(u.last_name) LIKE #{searchTerm} OR
+    lower(u.full_name) LIKE #{searchTerm} OR
+    lower(i.email) LIKE #{searchTerm} OR
+    lower(i.username) LIKE #{searchTerm}
+    )
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+    ORDER BY ${orderBy}
+    LIMIT #{limit}
+    OFFSET #{offset}
+  </select>
+
+  <select id="searchByTermCount" resultType="long">
+    <include refid="selectTermCount"/>
+    WHERE (
+    lower(u.first_name) LIKE #{searchTerm} OR
+    lower(u.last_name) LIKE #{searchTerm} OR
+    lower(u.full_name) LIKE #{searchTerm} OR
+    lower(i.email) LIKE #{searchTerm} OR
+    lower(i.username) LIKE #{searchTerm}
+    )
+    <if test="tenantId != null">
+      AND u.tenants_id = #{tenantId}
+    </if>
+  </select>
+
+  <update id="update">
+    UPDATE users
+    SET active            = #{active},
+      birth_date          = #{birthDate},
+      clean_speak_id      = #{cleanSpeakId},
+      data                = #{dataToDatabase},
+      expiry              = #{expiry},
+      first_name          = #{firstName},
+      full_name           = #{fullName},
+      image_url           = #{imageUrl},
+      last_name           = #{lastName},
+      last_update_instant = #{lastUpdateInstant},
+      middle_name         = #{middleName},
+      mobile_phone        = #{mobilePhone},
+      parent_email        = #{parentEmail},
+      timezone            = #{timezone}
+      WHERE id = #{id}
+  </update>
+
+  <update id="updateRegistration">
+    UPDATE user_registrations
+    SET authentication_token = #{authenticationToken},
+      clean_speak_id         = #{cleanSpeakId},
+      data                   = #{dataToDatabase},
+      last_update_instant    = #{lastUpdateInstant},
+      timezone               = #{timezone},
+      username               = #{username},
+      username_status        = #{usernameStatus},
+      verified               = #{verified}
+      WHERE id = #{id}
+  </update>
+
+  <update id="updateRegistrationUsernameStatuses">
+    UPDATE user_registrations
+    SET
+    username_status = #{contentStatus}
+    WHERE clean_speak_id IN (
+    <foreach collection="cleanSpeakIds" item="cleanSpeakId" separator=",">
+      #{cleanSpeakId}
+    </foreach>
+    )
+  </update>
+
+  <update id="updateUsernameStatuses" databaseId="mysql">
+    UPDATE identities i
+    INNER JOIN users u ON i.users_id = u.id
+    SET
+    username_status = #{contentStatus}
+    WHERE u.clean_speak_id IN (
+    <foreach collection="cleanSpeakIds" item="cleanSpeakId" separator=",">
+      #{cleanSpeakId}
+    </foreach>
+    )
+  </update>
+
+  <update id="updateUsernameStatuses" databaseId="postgresql">
+    UPDATE identities i
+    SET
+    username_status = #{contentStatus}
+    FROM users u
+    WHERE i.users_id = u.id
+    AND
+    u.clean_speak_id IN (
+    <foreach collection="cleanSpeakIds" item="cleanSpeakId" separator=",">
+      #{cleanSpeakId}
+    </foreach>
+    )
+  </update>
+
+  <update id="updateRecoveryCodes" databaseId="mysql">
+    UPDATE users
+    SET data = JSON_SET(CAST(data AS JSON),
+    '$.twoFactor.recoveryCodes',
+    JSON_ARRAY(
+    <foreach collection="user.twoFactor.recoveryCodes" item="recoveryCode" separator=",">
+      #{recoveryCode}
+    </foreach>
+    ))
+    WHERE id = #{user.id}
+  </update>
+
+  <update id="updateRecoveryCodes" databaseId="postgresql">
+    UPDATE users
+    SET data = JSONB_SET(data::JSONB, '{twoFactor, recoveryCodes}',
+    JSONB_BUILD_ARRAY(
+    <foreach collection="user.twoFactor.recoveryCodes" item="recoveryCode" separator=",">
+      #{recoveryCode}::TEXT
+    </foreach>
+    ))
+    WHERE id = #{user.id}
+  </update>
+
+  <update id="updateIdentity">
+    UPDATE identities
+    SET breached_password_last_checked_instant = #{user.breachedPasswordLastCheckedInstant},
+      breached_password_status                 = #{user.breachedPasswordStatus},
+      connectors_id                            = #{user.connectorId},
+      email                                    = #{user.email},
+      encryption_scheme                        = #{user.encryptionScheme},
+      factor                                   = #{user.factor},
+      last_login_instant                       = #{user.lastLoginInstant},
+      last_update_instant                      = #{user.lastUpdateInstant},
+      password                                 = #{user.password},
+      password_change_reason                   = #{user.passwordChangeReason},
+      password_change_required                 = #{user.passwordChangeRequired},
+      password_last_update_instant             = #{user.passwordLastUpdateInstant},
+      salt                                     = #{user.salt},
+      username                                 = #{user.username},
+      username_index                           = UPPER(#{user.uniqueUsername}),
+      username_status                          = #{user.usernameStatus},
+      verified                                 = #{user.verified}
+      WHERE users_id = #{user.id} AND status = #{status}
+  </update>
+
+  <update id="removeParentEmail">
+    UPDATE users
+    SET parent_email = NULL
+      WHERE id = #{id}
+  </update>
+</mapper>

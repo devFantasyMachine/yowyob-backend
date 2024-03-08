@@ -1,0 +1,107 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "exact_lower": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": "lowercase"
+        }
+      }
+    },
+    "index": {
+      "number_of_shards": 5,
+      "number_of_replicas": 1
+    }
+  },
+  "mappings": {
+    "_doc": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "birthDate": {
+          "type": "date"
+        },
+        "email": {
+          "type": "text",
+          "analyzer": "exact_lower",
+          "fielddata": true
+        },
+        "fullName": {
+          "type": "text",
+          "fielddata": true
+        },
+        "id": {
+          "type": "keyword"
+        },
+        "insertInstant": {
+          "type": "date"
+        },
+        "lastLoginInstant": {
+          "type": "date"
+        },
+        "lastUpdateInstant": {
+          "type": "date"
+        },
+        "login": {
+          "type": "keyword"
+        },
+        "memberships": {
+          "type": "nested",
+          "include_in_parent": true,
+          "properties": {
+            "groupId": {
+              "type": "keyword"
+            },
+            "id": {
+              "type": "keyword"
+            },
+            "insertInstant": {
+              "type": "date"
+            },
+            "userId": {
+              "type": "keyword"
+            }
+          }
+        },
+        "parentEmail": {
+          "type": "text",
+          "analyzer": "exact_lower",
+          "fielddata": true
+        },
+        "registrations": {
+          "type": "nested",
+          "include_in_parent": true,
+          "properties": {
+            "applicationId": {
+              "type": "keyword"
+            },
+            "id": {
+              "type": "keyword"
+            },
+            "insertInstant": {
+              "type": "date"
+            },
+            "lastLoginInstant": {
+              "type": "date"
+            },
+            "lastUpdateInstant": {
+              "type": "date"
+            },
+            "roles": {
+              "type": "keyword"
+            }
+          }
+        },
+        "tenantId": {
+          "type": "keyword"
+        },
+        "username": {
+          "type": "text",
+          "fielddata": true
+        }
+      }
+    }
+  }
+}

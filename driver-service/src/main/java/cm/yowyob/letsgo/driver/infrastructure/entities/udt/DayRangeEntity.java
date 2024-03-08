@@ -1,0 +1,20 @@
+package cm.yowyob.letsgo.driver.infrastructure.entities.udt;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import org.springframework.data.cassandra.core.mapping.UserDefinedType;
+
+import java.util.Set;
+
+@Data
+@Builder
+@AllArgsConstructor
+@UserDefinedType("day_time_range")
+public class DayRangeEntity {
+
+    Integer day;
+    Set<TimeRangeEntity> times;
+
+}
